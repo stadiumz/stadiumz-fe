@@ -1,5 +1,55 @@
 <script setup>
 const messages = ref([])
+
+const { token } = useAuth()
+// get id from params
+const route = useRoute()
+const id = route.params.id
+const topics = ref([])
+const selectedTopic = ref(0)
+
+const { data: topic, pending, error } = await useFetch(
+  () => `http://localhost:8000/api/subtopic/${id}`,
+  {
+    headers: {
+      Authorization: token,
+    },
+  }
+)
+topics.value = topic.value.data
+
+const getIdVideo = (url) => {
+  const urlParams = new URLSearchParams(new URL(url).search)
+  return urlParams.get('v')
+}
+
+// date to human readable
+const timeSince = (date) => {
+  const seconds = Math.floor((new Date() - date) / 1000)
+
+  let interval = seconds / 31536000
+
+  if (interval > 1) {
+    return Math.floor(interval) + ' years'
+  }
+  interval = seconds / 2592000
+  if (interval > 1) {
+    return Math.floor(interval) + ' months'
+  }
+  interval = seconds / 86400
+  if (interval > 1) {
+    return Math.floor(interval) + ' days'
+  }
+  interval = seconds / 3600
+  if (interval > 1) {
+    return Math.floor(interval) + ' hours'
+  }
+  interval = seconds / 60
+  if (interval > 1) {
+    return Math.floor(interval) + ' minutes'
+  }
+  return Math.floor(seconds) + ' seconds'
+}
 </script>
 
 <template>
@@ -10,45 +60,47 @@ const messages = ref([])
     </div>
     <div class="flex p-5 mt-5 bg-base-100 card">
       <div class="flex justify-between pb-5 border-b-4">
-        <div class="flex flex-col w-2/12">
+        <div class="flex flex-col w-6/12">
           <div>
-            <h1>How to make a shoes</h1>
+            <h1 class="text-2xl">{{ topics[selectedTopic].subtopic }}</h1>
           </div>
-          <div class="flex justify-between mt-10">
-            <div class="flex flex-row items-center text-gray-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fill="currentColor"
-                  d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555a.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533Zm1.5 16.103A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z"
-                />
-              </svg>
-              <span class="ml-2 text-sm"> 10 Subtopics</span>
-            </div>
-            <div class="flex flex-row items-center text-gray-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fill="currentColor"
-                  fill-rule="evenodd"
-                  d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5Z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              <span class="ml-2 text-sm">a few second ago</span>
+          <div class="w-5/12">
+            <div class="flex justify-between mt-10">
+              <div class="flex flex-row items-center text-gray-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555a.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533Zm1.5 16.103A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z"
+                  />
+                </svg>
+                <span class="ml-2 text-sm"> {{ topics.length }} Subtopics</span>
+              </div>
+              <div class="flex flex-row items-center text-gray-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span class="ml-2 text-sm">{{ timeSince(topics[0].topic.created_at) }}</span>
+              </div>
             </div>
           </div>
         </div>
         <div class="flex items-center">
-          <div class="btn btn-sm btn-primary">Take a #1 Quiz</div>
+          <div class="btn btn-sm btn-primary">Take a #{{ selectedTopic + 1 }} Quiz</div>
         </div>
       </div>
       <!-- 3 col -->
@@ -56,12 +108,13 @@ const messages = ref([])
         <div class="flex flex-col w-3/12 p-5 h-[630px] overflow-scroll">
           <div class="flex flex-col gap-3">
             <div
-              v-for="(item, index) in 20"
+              v-for="(item, index) in topics"
               :key="index"
-              class="justify-start text-left bg-gray-100 btn"
-              :class="index === 0 ? 'bg-gray-300' : 'btn-disabled'"
+              class="items-center justify-start text-left bg-gray-100 btn"
+              :class="item.is_locked === 0 ? 'bg-gray-300' : 'btn-disabled'"
+              @click="selectedTopic = index"
             >
-              <span v-if="index === 0"> #{{ index + 1 }} </span>
+              <span v-if="item.is_locked === 0"> #{{ index + 1 }} </span>
               <span v-else>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -77,7 +130,7 @@ const messages = ref([])
                   />
                 </svg>
               </span>
-              How to make a shoes in general
+              <span class="ml-2 text-xs">{{ item.subtopic }}</span>
             </div>
           </div>
         </div>
@@ -86,7 +139,7 @@ const messages = ref([])
           <iframe
             width="100%"
             height="415"
-            src="https://www.youtube.com/embed/5qap5aO4i9A"
+            :src="`https://www.youtube.com/embed/${getIdVideo(topics[selectedTopic].youtube_link)}`"
             frameborder="0"
             allowfullscreen
           ></iframe>
