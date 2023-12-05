@@ -34,9 +34,9 @@ export default {
     // brand colors purple
     
   },
-  darkMode: 'media', // or 'media' or 'class'
+  darkMode: 'class', // or 'media' or 'class'
   daisyui: {
-    themes: ['light', 'dark'],
+    themes: ['light'],
   },
   plugins: [require('@tailwindcss/typography'),require("daisyui")],
 }

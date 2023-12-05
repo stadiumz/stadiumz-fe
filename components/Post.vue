@@ -1,5 +1,27 @@
+<script setup>
+// config props
+defineProps({
+  post: {
+    type: Object,
+    required: true,
+  },
+})
+
+// datetime to human readable
+const toHumanReadable = (date) => {
+  const options = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }
+  return new Date(date).toLocaleDateString('id-ID', options)
+}
+
+</script>
+
 <template>
-  <div class="p-5 card bg-base-100">
+  <div class="p-5 my-5 card bg-base-100">
     <div class="flex flex-row items-center">
       <div class="avatar">
         <div class="w-16 rounded-full">
@@ -9,25 +31,16 @@
         </div>
       </div>
       <div class="flex flex-col ml-5">
-        <span class="font-bold text-primary">alvinmr10</span>
-        <span class="text-sm text-base-content">2 hours ago</span>
+        <span class="font-bold text-primary">{{ post.user.name }}</span>
+        <span class="text-sm text-base-content">{{ toHumanReadable(post.created_at) }}</span>
       </div>
     </div>
     <!-- title -->
     <div class="mt-5">
-      <h1 class="text-2xl font-bold">Lorem ipsum dolor sit amet.</h1>
+      <h1 class="text-2xl font-bold">{{ post.title }}</h1>
     </div>
-    <div class="mt-5">
-      <p class="text-base-content">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
-        voluptatum. Quisquam, voluptatum. Quisquam, voluptatum. Quisquam,
-        voluptatum. Quisquam, voluptatum. Quisquam, voluptatum. Quisquam,
-        voluptatum. Quisquam, voluptatum. Quisquam, voluptatum. Quisquam,
-        voluptatum. Quisquam, voluptatum. Quisquam, voluptatum. Quisquam,
-        voluptatum. Quisquam, voluptatum. Quisquam, voluptatum. Quisquam,
-        voluptatum. Quisquam, voluptatum. Quisquam, voluptatum. Quisquam,
-        voluptatum. Quisquam, voluptatum. Quisquam, voluptatum.
-      </p>
+    <div class="mt-5" v-html="post.content">
+      
     </div>
     <div class="mt-5">
       <div class="flex flex-row gap-5">
@@ -43,7 +56,7 @@
               d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 0 1 6 15.375a7.47 7.47 0 0 1 1.602-4.634c.151-.192.373-.309.6-.397c.473-.183.89-.514 1.212-.924a9.042 9.042 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V3a.75.75 0 0 1 .75-.75a2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218c-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715c.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H14.23a4.53 4.53 0 0 1-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23h-.777Zm-5.162-7.773a11.969 11.969 0 0 0-.831 4.398a12 12 0 0 0 .52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 0 1-.924-3.977c0-1.708.476-3.305 1.302-4.666c.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227Z"
             />
           </svg>
-          <span class="text-base-content">10</span>
+          <span class="text-base-content">{{ post.comments_count }}</span>
         </button>
         <div class="flex flex-row items-center gap-2 btn-sm btn btn-ghost">
           <svg
@@ -59,7 +72,7 @@
               clip-rule="evenodd"
             />
           </svg>
-          <span class="text-base-content">10</span>
+          <span class="text-base-content">{{ post.reactions_count }}</span>
         </div>
       </div>
     </div>

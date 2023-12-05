@@ -1,9 +1,6 @@
 <template>
   <NuxtLayout>
-    <Navbar />
-    <div class="px-10">
-      <NuxtPage />
-    </div>
+    
   </NuxtLayout>
 </template>
 
