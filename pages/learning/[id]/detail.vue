@@ -1,54 +1,88 @@
 <script setup>
 const messages = ref([])
 
+const question = ref('')
+
 const { token } = useAuth()
 // get id from params
 const route = useRoute()
 const id = route.params.id
+const loading = ref(false)
 const topics = ref([])
 const selectedTopic = ref(0)
 
-const { data: topic, pending, error } = await useFetch(
-  () => `http://localhost:8000/api/subtopic/${id}`,
-  {
-    headers: {
-      Authorization: token,
-    },
-  }
-)
+const {
+  data: topic,
+  pending,
+  error,
+} = await useFetch(() => `http://localhost:8000/api/subtopic/${id}`, {
+  headers: {
+    Authorization: token,
+  },
+})
 topics.value = topic.value.data
 
-const getIdVideo = (url) => {
-  const urlParams = new URLSearchParams(new URL(url).search)
-  return urlParams.get('v')
+const qnaGenerate = (index) => {
+  // push to messages
+  messages.value.push({
+    message: question.value,
+    isMe: true,
+  })
+  useFetch(
+    () => `http://localhost:3472/api/generate/chat/${topics.value[index].id}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+      body: JSON.stringify({
+        question: question.value,
+      }),
+    }
+  )
+    .then((res) => {
+      console.log(res)
+
+      messages.value.push({
+        message: res.data.value.data,
+        isMe: false,
+      })
+      question.value = ''
+    })
+    .catch((err) => {
+      console.log(err)
+    })
 }
 
-// date to human readable
-const timeSince = (date) => {
-  const seconds = Math.floor((new Date() - date) / 1000)
+const generateDetail = (index) => {
+  loading.value = true
+  console.log(index)
+  useFetch(
+    () => `http://localhost:3472/api/generate/detail/${topics.value[index].id}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+    }
+  )
+    .then((res) => {
+      // reload page
+      loading.value = false
+      console.log(res)
+    })
+    .catch((err) => {
+      loading.value = false
+      console.log(err)
+    })
+}
 
-  let interval = seconds / 31536000
-
-  if (interval > 1) {
-    return Math.floor(interval) + ' years'
-  }
-  interval = seconds / 2592000
-  if (interval > 1) {
-    return Math.floor(interval) + ' months'
-  }
-  interval = seconds / 86400
-  if (interval > 1) {
-    return Math.floor(interval) + ' days'
-  }
-  interval = seconds / 3600
-  if (interval > 1) {
-    return Math.floor(interval) + ' hours'
-  }
-  interval = seconds / 60
-  if (interval > 1) {
-    return Math.floor(interval) + ' minutes'
-  }
-  return Math.floor(seconds) + ' seconds'
+const getIdVideo = (url) => {
+  if (!url) return
+  const urlParams = new URLSearchParams(new URL(url).search)
+  return urlParams.get('v')
 }
 </script>
 
@@ -80,27 +114,13 @@ const timeSince = (date) => {
                 </svg>
                 <span class="ml-2 text-sm"> {{ topics.length }} Subtopics</span>
               </div>
-              <div class="flex flex-row items-center text-gray-500">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    fill="currentColor"
-                    fill-rule="evenodd"
-                    d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5Z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-                <span class="ml-2 text-sm">{{ timeSince(topics[0].topic.created_at) }}</span>
-              </div>
             </div>
           </div>
         </div>
         <div class="flex items-center">
-          <div class="btn btn-sm btn-primary">Take a #{{ selectedTopic + 1 }} Quiz</div>
+          <div class="btn btn-sm btn-primary">
+            Take a #{{ selectedTopic + 1 }} Quiz
+          </div>
         </div>
       </div>
       <!-- 3 col -->
@@ -134,15 +154,55 @@ const timeSince = (date) => {
             </div>
           </div>
         </div>
-        <div class="flex flex-col w-6/12 p-5">
+        <div
+          class="flex flex-col w-6/12 p-5"
+          v-if="topics[selectedTopic].youtube_link"
+        >
           <!-- this is where video youtube placed -->
           <iframe
             width="100%"
             height="415"
-            :src="`https://www.youtube.com/embed/${getIdVideo(topics[selectedTopic].youtube_link)}`"
+            :src="`https://www.youtube.com/embed/${getIdVideo(
+              topics[selectedTopic].youtube_link
+            )}`"
             frameborder="0"
             allowfullscreen
           ></iframe>
+        </div>
+        <div class="flex flex-col w-6/12 p-5" v-else>
+          <!-- this is where video youtube placed -->
+          <div class="flex flex-col items-center justify-center h-full">
+            <!-- btn generate youtube -->
+            <button
+              @click="generateDetail(selectedTopic)"
+              class="mb-5 btn btn-brand"
+              :class="loading ? 'loading' : ''"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-10 h-10 text-gray-500"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              <span v-if="loading">
+                <span class="mr-3 loading loading-spinner"></span>
+                Generate video
+              </span>
+              <span v-else>Generate video</span>
+            </button>
+            <span class="font-bold text-gray-500">No video available</span>
+            <span class="text-xs text-center text-gray-400">
+              This topic doesn't have any video yet.
+            </span>
+          </div>
         </div>
         <div class="flex flex-col w-4/12 p-5">
           <!-- this is where chat going to be placed -->
@@ -198,8 +258,9 @@ const timeSince = (date) => {
                   type="text"
                   placeholder="Write a message"
                   class="w-full input input-bordered join-item"
+                  v-model="question"
                 />
-                <button class="btn join-item btn-primary">
+                <button @click="qnaGenerate(selectedTopic)" class="btn join-item btn-primary">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="15"

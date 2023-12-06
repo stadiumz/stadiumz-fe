@@ -1,11 +1,26 @@
 <script setup>
 const loading = ref(false)
+const topic = ref('')
+const { token } = useAuth()
+
+
 const startLearn = () => {
   loading.value = true
-  setTimeout(() => {
+  
+  useFetch(() => 'http://localhost:3472/api/generate/topic', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token,
+    },
+    body: JSON.stringify({
+      topic: topic.value,
+    }),
+  })
+  .then((res) => {
     loading.value = false
-    navigateTo('/learning/detail')
-  }, 1000)
+    navigateTo('/learning')
+  })
 }
 </script>
 
@@ -24,23 +39,26 @@ const startLearn = () => {
         <span>What do you want to learn today?</span>
         <!-- input -->
         <div class="flex flex-col mt-5">
-          <input
-            type="text"
-            placeholder="Search for anything"
-            class="p-2 border-2 border-gray-300 rounded-md outline-none"
-          />
-          <button
-            @click="startLearn"
-            class="mt-2 text-white btn bg-brand"
-            :class="loading ? 'btn-disabled' : ''"
-          >
-            <div v-if="loading" class="flex items-center">
-              <span class="mr-3 loading loading-spinner"></span>
-              Generate material & quiz
-            </div>
+          <form class="flex flex-col mt-5" @submit.prevent="startLearn">
+            <input
+              type="text"
+              placeholder="Search for anything"
+              class="p-2 border-2 border-gray-300 rounded-md outline-none"
+              v-model="topic"
+            />
+            <button
+              type="submit"
+              class="mt-2 text-white btn bg-brand"
+              :class="loading ? 'btn-disabled' : ''"
+            >
+              <div v-if="loading" class="flex items-center">
+                <span class="mr-3 loading loading-spinner"></span>
+                Generate material & quiz
+              </div>
 
-            <span v-else>Start Learn</span>
-          </button>
+              <span v-else>Start Learn</span>
+            </button>
+          </form>
         </div>
       </div>
     </div>
