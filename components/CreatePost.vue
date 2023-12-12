@@ -14,7 +14,7 @@ const toCreate = () => {
     <div class="items-center avatar">
       <div class="w-16 rounded-full">
         <img
-          src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"
+          :src="data.profile_photo"
         />
       </div>
       <span class="ml-5 font-bold text-brand-700">{{ data.name }}</span>

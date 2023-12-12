@@ -1,11 +1,10 @@
 <script setup>
-
 definePageMeta({
-    auth: {
-        unauthenticatedOnly: true,
-        navigateAuthenticatedTo: '/',
-    },
-    layout: 'blank',
+  auth: {
+    unauthenticatedOnly: true,
+    navigateAuthenticatedTo: '/',
+  },
+  layout: 'blank',
 })
 
 const email = ref('')
@@ -19,18 +18,18 @@ const login = async () => {
     password: password.value,
     redirect: false,
   })
-  .then(() => {
-    navigateTo('/')
-  })
-  .catch((error) => {
-    alert(error.message)
-  })
+    .then(() => {
+      navigateTo('/')
+    })
+    .catch((error) => {
+      alert(error.message)
+    })
 }
 </script>
 
 <template>
   <div class="flex items-center justify-center h-screen">
-    <div class="w-1/3 p-6 bg-white rounded shadow">
+    <div class="w-1/2 p-6 bg-white rounded shadow">
       <h2 class="mb-4 text-2xl font-bold">Login</h2>
       <form @submit.prevent="login">
         <div class="mb-4">
@@ -55,11 +54,17 @@ const login = async () => {
         </div>
         <button
           type="submit"
-          class="w-full px-4 py-2 text-white bg-blue-500 rounded"
+          class="w-full btn btn-primary"
         >
           Login
         </button>
       </form>
+      <div>
+        <p class="mt-4">
+          Don't have an account?
+          <nuxt-link to="/auth/register" class="font-bold text-brand">Register</nuxt-link>
+        </p>
+      </div>
     </div>
   </div>
 </template>

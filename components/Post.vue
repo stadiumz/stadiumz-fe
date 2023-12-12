@@ -1,7 +1,6 @@
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted } from 'vue'
 const { token, data } = useAuth()
-
 
 // config props
 const props = defineProps({
@@ -15,7 +14,9 @@ var isLiked = ref(false)
 
 onMounted(() => {
   // check if user already like this post
-  isLiked.value = props.post.reactions.map((reaction) => reaction.user_id === data.value.id)[0]
+  isLiked.value = props.post.reactions.map(
+    (reaction) => reaction.user_id === data.value.id
+  )[0]
 })
 
 // datetime to human readable
@@ -39,16 +40,15 @@ const likePost = async (id) => {
       article_id: id,
     },
   })
-  .then((data) => {
-    // toggle isLiked
-    isLiked.value = !isLiked.value
-    props.post.reactions_count = data.data.value.data.length
-  })
-  .catch(err =>{
-    console.log(err);
-  })
+    .then((data) => {
+      // toggle isLiked
+      isLiked.value = !isLiked.value
+      props.post.reactions_count = data.data.value.data.length
+    })
+    .catch((err) => {
+      console.log(err)
+    })
 }
-
 </script>
 
 <template>
@@ -56,36 +56,33 @@ const likePost = async (id) => {
     <div class="flex flex-row items-center">
       <div class="avatar">
         <div class="w-16 rounded-full">
-          <img
-            :src="data.profile_photo"
-          />
+          <img :src="post.user.profile_photo" />
         </div>
       </div>
       <div class="flex flex-col ml-5">
         <span class="font-bold text-primary">{{ post.user.name }}</span>
-        <span class="text-sm text-base-content">{{ toHumanReadable(post.created_at) }}</span>
+        <span class="text-sm text-base-content">{{
+          toHumanReadable(post.created_at)
+        }}</span>
       </div>
     </div>
     <!-- title -->
     <div class="mt-5">
       <h1 class="text-2xl font-bold">{{ post.title }}</h1>
     </div>
-    <div class="mt-5" v-html="post.content">
-      
-    </div>
+    <div class="mt-5" v-html="post.content"></div>
     <div class="mt-5">
       <div class="flex flex-row gap-5">
-        <button @click="likePost(post.id)" class="flex flex-row items-center gap-2 btn-sm btn btn-ghost">
+        <button
+          @click="likePost(post.id)"
+          class="flex flex-row items-center gap-2 btn-sm btn btn-ghost"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="15"
             height="15"
             viewBox="0 0 24 24"
-            :class="
-              isLiked
-                ? 'text-brand'
-                : ''
-            "
+            :class="isLiked ? 'text-brand' : ''"
           >
             <path
               fill="currentColor"
@@ -94,7 +91,10 @@ const likePost = async (id) => {
           </svg>
           <span class="text-base-content">{{ post.reactions_count }}</span>
         </button>
-        <nuxt-link :to="`/article/${post.id}`" class="flex flex-row items-center gap-2 btn-sm btn btn-ghost">
+        <nuxt-link
+          :to="`/article/${post.id}`"
+          class="flex flex-row items-center gap-2 btn-sm btn btn-ghost"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="15"

@@ -95,7 +95,7 @@ const likePost = async (id) => {
         <div class="avatar">
           <div class="w-16 rounded-full">
             <img
-              :src="'/' + articles.user.profile_photo"
+              :src="articles.user.profile_photo"
             />
           </div>
         </div>
@@ -166,7 +166,7 @@ const likePost = async (id) => {
         <div class="flex-shrink-0">
           <img
             class="w-10 h-10 rounded-full"
-            :src="'/' + comment.user.profile_photo"
+            :src="comment.user.profile_photo"
             alt="User avatar"
           />
         </div>
@@ -192,7 +192,7 @@ const likePost = async (id) => {
         <div class="flex-shrink-0">
           <img
             class="w-10 h-10 rounded-full"
-            src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"
+            :src="data.profile_photo"
             alt="User avatar"
           />
         </div>
