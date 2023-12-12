@@ -10,6 +10,7 @@ const id = route.params.id
 const loading = ref(false)
 const topics = ref([])
 const selectedTopic = ref(0)
+const answers = ref([])
 
 const {
   data: topic,
@@ -28,6 +29,8 @@ const qnaGenerate = (index) => {
     message: question.value,
     isMe: true,
   })
+  var _question = question.value
+  question.value = ''
   useFetch(
     () => `http://localhost:3472/api/generate/chat/${topics.value[index].id}`,
     {
@@ -37,7 +40,7 @@ const qnaGenerate = (index) => {
         Authorization: token,
       },
       body: JSON.stringify({
-        question: question.value,
+        question: _question,
       }),
     }
   )
@@ -57,7 +60,6 @@ const qnaGenerate = (index) => {
 
 const generateDetail = (index) => {
   loading.value = true
-  console.log(index)
   useFetch(
     () => `http://localhost:3472/api/generate/detail/${topics.value[index].id}`,
     {
@@ -71,7 +73,10 @@ const generateDetail = (index) => {
     .then((res) => {
       // reload page
       loading.value = false
-      console.log(res)
+      topics.value[selectedTopic.value].youtube_link =
+        res.data.value.data.youtube_link
+      topics.value[selectedTopic.value].youtube_transcript =
+        res.data.value.data.youtube_transcript
     })
     .catch((err) => {
       loading.value = false
@@ -79,10 +84,74 @@ const generateDetail = (index) => {
     })
 }
 
+const changeTopic = (index) => {
+  selectedTopic.value = index
+  messages.value = []
+}
+
 const getIdVideo = (url) => {
   if (!url) return
   const urlParams = new URLSearchParams(new URL(url).search)
   return urlParams.get('v')
+}
+
+const generateQuiz = (index) => {
+  loading.value = true
+  useFetch(
+    () => `http://localhost:3472/api/generate/quiz/${topics.value[index].id}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+    }
+  )
+    .then((res) => {
+      // reload page
+      loading.value = false
+      topics.value[selectedTopic.value].quiz =
+        res.data.value.data
+      answers.value = []
+      topics.value[selectedTopic.value].options =
+        res.data.value.data.options
+    })
+    .catch((err) => {
+      loading.value = false
+      console.log(err)
+    })
+}
+
+const answerQuiz = (index) => {
+  useFetch(
+    () => `http://localhost:8000/api/quiz/answer/${topics.value[index].id}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+      // body is array of answer
+      body: JSON.stringify({
+        answers: answers.value,
+      }),
+    }
+  )
+    .then((res) => {
+      if (res.status.value === 'success') {
+        alert('Congratulation, you have finished the quiz')
+        topics.value[selectedTopic.value].is_done = 1
+        selectedTopic.value = selectedTopic.value + 1
+        topics.value[selectedTopic.value].is_locked = 0
+        // close modal
+        quiz.close()
+      } else {
+        alert('Sorry, you have failed the quiz')
+      }
+    })
+    .catch((err) => {
+      alert('Sorry, you have failed the quiz')
+    })
 }
 </script>
 
@@ -117,11 +186,107 @@ const getIdVideo = (url) => {
             </div>
           </div>
         </div>
-        <div class="flex items-center">
-          <div class="btn btn-sm btn-primary">
+        <div class="flex items-center" onclick="quiz.showModal()">
+          <div class="btn btn-sm btn-primary" v-if="topics[selectedTopic].is_done == 0 && topics[selectedTopic].youtube_link && topics[selectedTopic].youtube_transcript">
             Take a #{{ selectedTopic + 1 }} Quiz
           </div>
         </div>
+        <dialog id="quiz" class="modal">
+          <div class="modal-box">
+            <h3 class="text-lg font-bold">
+              Quiz {{ topics[selectedTopic].subtopic }}
+            </h3>
+            <!-- make quiz interface  -->
+            <div>
+              <div
+                class="flex flex-col mt-5"
+                v-if="topics[selectedTopic].quiz.length > 0"
+                v-for="(item, index) in topics[selectedTopic].quiz"
+                :key="index"
+              >
+                <div class="flex flex-row justify-between">
+                  <div class="flex flex-col">
+                    <span class="text-sm text-gray-500"
+                      >Question {{ index + 1 }}</span
+                    >
+                    <span class="text-lg font-bold">
+                      {{ item.question }}
+                    </span>
+                  </div>
+                </div>
+                <div
+                  class="grid w-full grid-cols-2 gap-3 mt-5"
+                  v-if="item.options && item.options.length > 0"
+                >
+                  <div
+                    v-for="(item_ans, index_ans) in item.options"
+                    :key="index"
+                  >
+                    <input
+                      class="hidden"
+                      :id="'radio_' + index_ans + '_' + index"
+                      type="radio"
+                      :value="item_ans"
+                      :name="answer + '_' + index"
+                      v-model="answers[index]"
+                    />
+                    <label
+                      class="flex flex-col p-4 border-2 border-gray-400 cursor-pointer"
+                      :for="'radio_' + index_ans + '_' + index"
+                    >
+                      <span class="text-xs font-semibold">{{ item_ans }}</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-col mt-10" v-else>
+                <!-- button make quiz -->
+                <div class="flex flex-col items-center justify-center h-full">
+                  <!-- btn generate youtube -->
+                  <button @click="generateQuiz(selectedTopic)" class="mb-5 btn btn-brand" :class="loading ? 'btn-disabled' : ''">
+                    <svg
+                      v-if="!loading"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-10 h-10 text-gray-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                    <span v-if="loading" class="flex items-center justify-center">
+                      <span class="mr-3 loading loading-spinner"></span>
+                      Generate Quiz
+                    </span>
+                    <span v-else>Generate Quiz</span>
+                  </button>
+                  <span class="font-bold text-gray-500">No quiz available</span>
+                  <span class="text-xs text-center text-gray-400">
+                    This topic doesn't have any quiz yet.
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="modal-action">
+              <button
+                v-if="topics[selectedTopic].quiz.length > 0"
+                class="btn btn-primary"
+                @click="answerQuiz(selectedTopic)"
+              >
+                Submit
+              </button>
+              <form method="dialog">
+                <!-- if there is a button in form, it will close the modal -->
+                <button class="btn">Close</button>
+              </form>
+            </div>
+          </div>
+        </dialog>
       </div>
       <!-- 3 col -->
       <div class="flex flex-row justify-between mt-5">
@@ -130,9 +295,14 @@ const getIdVideo = (url) => {
             <div
               v-for="(item, index) in topics"
               :key="index"
-              class="items-center justify-start text-left bg-gray-100 btn"
-              :class="item.is_locked === 0 ? 'bg-gray-300' : 'btn-disabled'"
-              @click="selectedTopic = index"
+              class="items-center justify-start text-left btn"
+              :class="{
+                'bg-brand text-white': index === selectedTopic,
+                'text-gray-500': index !== selectedTopic,
+                'btn-disabled': item.is_locked === 1,
+                'bg-green-500 text-white': item.is_done === 1,
+              }"
+              @click="changeTopic(index)"
             >
               <span v-if="item.is_locked === 0"> #{{ index + 1 }} </span>
               <span v-else>
@@ -253,14 +423,17 @@ const getIdVideo = (url) => {
               </div>
             </div>
             <div class="px-4 pt-4 mb-2 border-t-2 border-gray-200 sm:mb-0">
-              <div class="w-full join">
+              <form
+                @submit.prevent="qnaGenerate(selectedTopic)"
+                class="w-full join"
+              >
                 <input
                   type="text"
                   placeholder="Write a message"
                   class="w-full input input-bordered join-item"
                   v-model="question"
                 />
-                <button @click="qnaGenerate(selectedTopic)" class="btn join-item btn-primary">
+                <button type="submit" class="btn join-item btn-primary">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="15"
@@ -273,7 +446,7 @@ const getIdVideo = (url) => {
                     />
                   </svg>
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         </div>
@@ -281,6 +454,9 @@ const getIdVideo = (url) => {
     </div>
   </div>
 </template>
-<style></style>
 
-<style></style>
+<style scoped>
+input:checked + label {
+  @apply bg-brand text-white;
+}
+</style>
