@@ -68,9 +68,10 @@
           </div>
         </NuxtLink>
         <NuxtLink
-          to="https://stadiumz-sketch.vercel.app"
+          to="http://localhost:3334"
           active-class="active"
           class="font-bold"
+          _target="blank"
         >
           <div class="flex flex-col items-center">
             <svg

@@ -1,12 +1,40 @@
 <script setup>
 const loading = ref(false)
 const activeTab = ref('score')
-const startReview = () => {
+const scores = ref([])
+const { token } = useAuth()
+const file = ref(null)
+const position = ref('')
+const description = ref('')
+const showAdvice = ref('')
+const selectedReview = ref('')
+
+const generateResume = async () => {
+  let formData = new FormData()
+  formData.append('resume', file.value)
+  formData.append('position', position.value)
+  formData.append('description', description.value)
   loading.value = true
-  setTimeout(() => {
-    loading.value = false
-  }, 1000)
+  await useFetch(() => 'http://localhost:3472/api/generate/resume', {
+    method: 'POST',
+    headers: {
+      Authorization: token,
+    },
+    body: formData,
+  })
+    .then((res) => {
+      console.log(res)
+      scores.value = res.data.value.data
+      loading.value = false
+    })
+    .catch((err) => {
+      console.log(err)
+    })
 }
+
+const snakeToCamel = (s) =>
+  s.replace(/(_\w)/g, (k) => k[1].toUpperCase())
+
 </script>
 
 <template>
@@ -15,12 +43,13 @@ const startReview = () => {
       <h1 class="text-2xl font-bold">Review a Resume</h1>
       <span> Get a review from AI and improve your resume! </span>
     </div>
-    <div class="flex h-[780px] p-10 mt-5 bg-base-100 card">
+    <div class="flex p-10 mt-5 bg-base-100 card">
       <div class="flex flex-col gap-5">
         <div class="w-full form-control">
           <label> Resume </label>
           <input
             type="file"
+            v-on:change="file = $event.target.files[0]"
             class="w-full file-input file-input-primary input-bordered"
           />
         </div>
@@ -28,6 +57,7 @@ const startReview = () => {
           <label>Position</label>
           <input
             type="text"
+            v-model="position"
             placeholder="Software Engineer"
             class="w-full input input-primary input-bordered"
           />
@@ -36,6 +66,7 @@ const startReview = () => {
           <label>Job Description</label>
           <textarea
             placeholder="Job Description"
+            v-model="description"
             class="w-full textarea textarea-bordered textarea-primary"
           ></textarea>
         </div>
@@ -44,7 +75,7 @@ const startReview = () => {
           <button
             class="btn btn-primary"
             :class="loading ? 'loading' : ''"
-            @click="startReview"
+            @click="generateResume"
           >
             <span v-if="loading">Loading...</span>
             <svg
@@ -68,26 +99,24 @@ const startReview = () => {
         <div class="flex flex-col w-1/2 gap-5">
           <div
             class="flex flex-row items-center justify-between w-full p-3 cursor-pointer card"
-            :class="index === 0 ? 'outline' : ''"
-            @click="activeTab = 'score'"
-            v-for="(item, index) in 8"
+            :class="selectedReview === item.name ? 'outline' : ''"
+            @click="selectedReview = item.name; showAdvice = item.advice"
+            v-for="(item, index) in scores"
             :key="index"
           >
-            <h2>Contact Information</h2>
+            <h2>{{ snakeToCamel(item.name) }}</h2>
             <div class="flex flex-col text-center">
               <span>Score</span>
-              <span class="text-2xl text-green-400">100%</span>
+              <span class="text-2xl" :class="item.percentage >= 50 ? 'text-green-400' : 'text-red-400'">
+                {{ item.percentage }} %
+              </span>
             </div>
           </div>
         </div>
         <div class="flex flex-col w-1/2 gap-5">
-          <h2 class="font-bold">Contact Information</h2>
+          <h2 class="font-bold">{{ selectedReview }}</h2>
           <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam
-            voluptatum, quibusdam, quia, quos voluptates voluptatem quod
-            voluptatibus quas doloribus quidem voluptate. Quisquam voluptatum,
-            quibusdam, quia, quos voluptates voluptatem quod voluptatibus quas
-            doloribus quidem voluptate.
+            {{ showAdvice }}
           </p>
         </div>
       </div>

@@ -17,7 +17,13 @@ const login = async () => {
   const { error } = await signIn('credentials', {
     email: email.value,
     password: password.value,
-    callbackUrl: '/',
+    redirect: false,
+  })
+  .then(() => {
+    navigateTo('/')
+  })
+  .catch((error) => {
+    alert(error.message)
   })
 }
 </script>

@@ -4,10 +4,6 @@ const { token } = useAuth()
 
 const posts = ref([])
 
-definePageMeta({
-  middleware: 'auth',
-})
-
 const {
   data: articles,
   pending,
