@@ -23,9 +23,13 @@ const generateResume = async () => {
     body: formData,
   })
     .then((res) => {
-      console.log(res)
-      scores.value = res.data.value.data
-      loading.value = false
+      if (res.status.value == 'success') {
+        loading.value = false
+        scores.value = res.data.value.data
+      } else {
+        loading.value = false
+        alert(res.error.value.cause.response._data.message)
+      }
     })
     .catch((err) => {
       console.log(err)

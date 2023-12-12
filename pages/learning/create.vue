@@ -18,8 +18,13 @@ const startLearn = () => {
     }),
   })
   .then((res) => {
-    loading.value = false
-    navigateTo('/learning')
+    if(res.status.value == 'success'){
+      loading.value = false
+      navigateTo('/learning/detail')
+    }else{
+      loading.value = false
+      alert(res.error.value.cause.response._data.message)
+    }
   })
 }
 </script>
