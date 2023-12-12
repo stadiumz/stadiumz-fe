@@ -138,6 +138,24 @@ const logout = () => {
               Profile
             </a>
           </li>
+          <li>
+            <nuxt-link to="/topup" class="">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  fill="currentColor"
+                  fill-rule="evenodd"
+                  d="M4.75 3A2.75 2.75 0 0 0 2 5.75v12.5A2.75 2.75 0 0 0 4.75 21h14.5A2.75 2.75 0 0 0 22 18.25V5.75A2.75 2.75 0 0 0 19.25 3H4.75Zm0 1.5h14.5a1.25 1.25 0 0 1 1.25 1.25v1.5H3.5v-1.5A1.25 1.25 0 0 1 4.75 4.5Zm0 3.5h14.5a1.25 1.25 0 0 1 1.25 1.25v8.5a1.25 1.25 0 0 1-1.25 1.25H4.75a1.25 1.25 0 0 1-1.25-1.25v-8.5A1.25 1.25 0 0 1 4.75 8Zm7.75 3.75a.75.75 0 0 0-1.5 0v4.5a.75.75 0 0 0 1.5 0v-4.5Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              Topup
+            </nuxt-link>
+          </li>
           <li @click="logout()">
             <a>
               <svg
