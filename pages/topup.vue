@@ -42,8 +42,8 @@ const topUp = async (id) => {
     }),
   })
     .then((res) => {
+      isLoading.value = false
       if (res.status.value == 'success') {
-        isLoading.value = false
         // redirect to payment page
         window.location.href = res.data.value.data.invoice_url
       } else {
@@ -67,21 +67,56 @@ getPackage()
         v-for="(item, index) in packages"
         :key="index"
       >
-        <div class="flex flex-col items-center justify-center">
-          <span class="text-2xl font-bold">{{ item.name }}</span>
-          <span class="text-2xl font-bold">{{ rupiah(item.price) }}</span>
-        </div>
-        <div class="flex flex-col items-center justify-center mt-5">
-          <button
-            v-if="!isLoading"
-            class="btn btn-primary"
-            @click="topUp(item.id)"
-          >
-            Top Up
-          </button>
-          <div v-else="isLoading" class="flex items-center">
-            <span class="mr-3 loading loading-spinner"></span>
-            <span> Loading </span>
+        <div class="card w-80 bg-base-100 min-h-[460px] shadow-md">
+          <div class="card-body">
+            <div class="badge badge-primary">{{ item.credit }} Credits</div>
+            <h2 class="text-3xl card-title">{{ rupiah(item.price) }}</h2>
+            <span
+              >Get <strong>{{ item.credit }} credits</strong> for:</span
+            >
+            <ul class="list-disc list-outside">
+              <li>
+                <strong>{{ item.credit }}x review resume</strong> with AI ✨
+              </li>
+              <li>Or, {{ item.credit }}x generative learning ✨</li>
+            </ul>
+            <div
+              class="absolute justify-end mt-3 card-actions bottom-8 left-8 right-8"
+            >
+              <button
+                v-if="!isLoading"
+                @click="topUp(item.id)"
+                class="lemonsqueezy-button btn btn-block btn-primary"
+              >
+                Purchase
+              </button>
+              <button
+                v-else
+                class="lemonsqueezy-button btn btn-block btn-disabled btn-primary"
+              >
+                <svg
+                  class="w-5 h-5 mr-3 -ml-1 text-white animate-spin"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  ></path>
+                </svg>
+                Processing
+              </button>
+            </div>
           </div>
         </div>
       </div>
