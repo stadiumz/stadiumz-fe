@@ -18,7 +18,6 @@ posts.value = articles.value.data
 
 <template>
   <div class="flex flex-col justify-center px-48 mt-5">
-
     <CreatePost />
 
     <div class="w-full mt-5">

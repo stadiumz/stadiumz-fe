@@ -1,10 +1,21 @@
 <script setup>
+import { onMounted } from 'vue';
+const { token, data } = useAuth()
+
+
 // config props
-defineProps({
+const props = defineProps({
   post: {
     type: Object,
     required: true,
   },
+})
+
+var isLiked = ref(false)
+
+onMounted(() => {
+  // check if user already like this post
+  isLiked.value = props.post.reactions.map((reaction) => reaction.user_id === data.value.id)[0]
 })
 
 // datetime to human readable
@@ -18,6 +29,26 @@ const toHumanReadable = (date) => {
   return new Date(date).toLocaleDateString('id-ID', options)
 }
 
+const likePost = async (id) => {
+  useFetch(() => 'http://localhost:8000/api/reactions', {
+    method: 'POST',
+    headers: {
+      Authorization: token,
+    },
+    body: {
+      article_id: id,
+    },
+  })
+  .then((data) => {
+    // toggle isLiked
+    isLiked.value = !isLiked.value
+    props.post.reactions_count = data.data.value.data.length
+  })
+  .catch(err =>{
+    console.log(err);
+  })
+}
+
 </script>
 
 <template>
@@ -26,7 +57,7 @@ const toHumanReadable = (date) => {
       <div class="avatar">
         <div class="w-16 rounded-full">
           <img
-            src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"
+            :src="data.profile_photo"
           />
         </div>
       </div>
@@ -44,21 +75,26 @@ const toHumanReadable = (date) => {
     </div>
     <div class="mt-5">
       <div class="flex flex-row gap-5">
-        <button class="flex flex-row items-center gap-2 btn-sm btn btn-ghost">
+        <button @click="likePost(post.id)" class="flex flex-row items-center gap-2 btn-sm btn btn-ghost">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="15"
             height="15"
             viewBox="0 0 24 24"
+            :class="
+              isLiked
+                ? 'text-brand'
+                : ''
+            "
           >
             <path
               fill="currentColor"
               d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 0 1 6 15.375a7.47 7.47 0 0 1 1.602-4.634c.151-.192.373-.309.6-.397c.473-.183.89-.514 1.212-.924a9.042 9.042 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V3a.75.75 0 0 1 .75-.75a2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218c-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715c.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H14.23a4.53 4.53 0 0 1-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23h-.777Zm-5.162-7.773a11.969 11.969 0 0 0-.831 4.398a12 12 0 0 0 .52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 0 1-.924-3.977c0-1.708.476-3.305 1.302-4.666c.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227Z"
             />
           </svg>
-          <span class="text-base-content">{{ post.comments_count }}</span>
+          <span class="text-base-content">{{ post.reactions_count }}</span>
         </button>
-        <div class="flex flex-row items-center gap-2 btn-sm btn btn-ghost">
+        <nuxt-link :to="`/article/${post.id}`" class="flex flex-row items-center gap-2 btn-sm btn btn-ghost">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="15"
@@ -72,13 +108,10 @@ const toHumanReadable = (date) => {
               clip-rule="evenodd"
             />
           </svg>
-          <span class="text-base-content">{{ post.reactions_count }}</span>
-        </div>
+          <span class="text-base-content">{{ post.comments_count }}</span>
+        </nuxt-link>
       </div>
     </div>
   </div>
 </template>
-<script>
-export default {}
-</script>
 <style></style>

@@ -1,5 +1,7 @@
 
 <script setup>
+
+const { data } = useAuth()
 // router
 const toCreate = () => {
   navigateTo('/create')
@@ -15,7 +17,7 @@ const toCreate = () => {
           src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"
         />
       </div>
-      <span class="ml-5 font-bold text-brand-700">alvinmr10</span>
+      <span class="ml-5 font-bold text-brand-700">{{ data.name }}</span>
     </div>
 
     <!-- input button -->

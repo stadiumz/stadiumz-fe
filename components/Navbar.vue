@@ -1,3 +1,15 @@
+<script setup>
+const { token, signOut, data } = useAuth()
+
+const logout = () => {
+  alert('Logout')
+  signOut()
+  window.location.href = '/'
+}
+
+// logout()
+</script>
+
 <template>
   <div class="navbar bg-base-100">
     <div class="navbar-start">
@@ -99,7 +111,7 @@
           role="button"
           class="flex flex-row btn btn-ghost avatar"
         >
-          <span class="mr-3 font-bold text-primary">alvinmr10</span>
+          <span class="mr-3 font-bold text-primary">{{ data.name }}</span>
           <div class="w-10 rounded-full">
             <img
               src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"
@@ -107,6 +119,7 @@
           </div>
         </div>
         <ul
+          tabindex="0"
           class="mt-3 z-[1] p-2 shadow menu menu-md dropdown-content bg-base-100 rounded-box w-52"
         >
           <li>
@@ -125,7 +138,7 @@
               Profile
             </a>
           </li>
-          <li>
+          <li @click="logout()">
             <a>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
