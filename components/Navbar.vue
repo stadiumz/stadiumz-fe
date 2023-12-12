@@ -123,7 +123,7 @@ const logout = () => {
           class="mt-3 z-[1] p-2 shadow menu menu-md dropdown-content bg-base-100 rounded-box w-52"
         >
           <li>
-            <a class="">
+            <nuxt-link to="/profile" class="">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -136,7 +136,7 @@ const logout = () => {
                 />
               </svg>
               Profile
-            </a>
+            </nuxt-link>
           </li>
           <li>
             <nuxt-link to="/topup" class="">
