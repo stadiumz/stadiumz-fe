@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: false,
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/color-mode', "@nuxt/image", "@sidebase/nuxt-auth"],
+  plugins: ['~/plugins/laravel-echo.ts'],
   colorMode: {
     preference: 'light',
     dataValue: 'theme',

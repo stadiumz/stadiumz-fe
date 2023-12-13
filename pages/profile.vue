@@ -31,7 +31,7 @@ const updateProfile = async () => {
 <template>
     <div class="flex items-center justify-center mt-10 text-center bg-gray-100">
         <div class="p-6 bg-white rounded-lg shadow-lg w-96">
-            <img :src="'/' + data.profile_photo" alt="Profile Image" class="w-32 h-32 mx-auto mb-4 rounded-full">
+            <img :src="data.profile_photo" alt="Profile Image" class="w-32 h-32 mx-auto mb-4 rounded-full">
             <h2 class="text-2xl font-bold text-gray-800">{{ data.name }}</h2>
             <p class="text-gray-600">{{ data.email }}</p>
             <p class="text-gray-600">Credit: {{ data.credit }}</p>

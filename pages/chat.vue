@@ -1,5 +1,5 @@
 <script setup>
-const { token } = useAuth()
+const { token, data } = useAuth()
 // Sample reactive data for active chat
 const activeChat = ref(null)
 const userList = ref([
@@ -43,17 +43,48 @@ const newMessage = ref('')
 // Function to handle sending a message
 const sendMessage = () => {
   if (newMessage.value.trim()) {
-    activeChat.value.messages.push({
-      id: activeChat.value.messages.length + 1,
-      sender: 'You', // Replace with actual user logic
-      content: newMessage.value,
+    useFetch(() => `http://localhost:8000/api/chat`, {
+      method: 'POST',
+      headers: {
+        Authorization: token,
+      },
+      body: JSON.stringify({
+        to_id: activeChat.value.id,
+        message: newMessage.value,
+      }),
     })
+      .then((res) => {
+        if (res.status.value == 'success') {
+          // Add new message to active chat
+          activeChat.value.messages.push(res.data.value.data)
+          // change lastMessage
+          userList.value = userList.value.map((user) => {
+            if (user.id === activeChat.value.id) {
+              user.lastMessage = res.data.value.data
+            }
+            return user
+          })
+        } else {
+          alert(res.error.value.cause.response._data.message)
+        }
+      })
+      .catch((err) => {
+        console.log(err)
+      })
+
     newMessage.value = '' // Reset input after sending
   }
 }
 
 const selectUser = async (user) => {
+  // scroll to bottom when select user
+  setTimeout(() => {
+    var element = document.getElementById('chats')
+    // this div use overflow-y-auto, so we need to scroll to bottom
+    element.scrollTop = element.scrollHeight
+  }, 100)
   activeChat.value = {
+    id: user.id,
     userName: user.name,
     userImage: user.profile_photo,
     messages: [
@@ -65,15 +96,12 @@ const selectUser = async (user) => {
     headers: {
       Authorization: token,
     },
-    body: JSON.stringify({
-      user_id: user.id,
-    }),
   })
     .then((res) => {
       if (res.status.value == 'success') {
         activeChat.value = {
           ...activeChat.value,
-          messages: res.data.value.data.chats,
+          messages: res.data.value.messages,
         }
       } else {
         console.log(res.error.value.cause.response)
@@ -83,7 +111,21 @@ const selectUser = async (user) => {
       console.log(err)
     })
   // Optionally, fetch user's chat messages here
+  //   window.Echo.channel('chat-channel-' + user.id).listen('new-chat', (e) => {
+  //       alert('New message received')
+  //     })
+  var pusher = new Pusher('a49662ca58e32fe4ae32', {
+    cluster: 'ap1',
+  })
+
+  //   delete if has subscribe before
+  pusher.unsubscribe('chat-channel-' + data.value.id)
+  var channel = pusher.subscribe('chat-channel-' + data.value.id)
+  channel.bind('new-chat', function (data) {
+    activeChat.value.messages.push(data)
+  })
 }
+
 </script>
 
 <template>
@@ -98,20 +140,18 @@ const selectUser = async (user) => {
             >
               <img
                 class="object-cover w-10 h-10 rounded-full"
-                :src="'/' + user.profile_photo"
+                :src="user.profile_photo"
                 :alt="user.name"
               />
+
               <div class="w-full pb-2">
                 <div class="flex justify-between">
                   <span class="block ml-2 font-semibold text-gray-600">{{
                     user.name
                   }}</span>
-                  <span class="block ml-2 text-sm text-gray-600">{{
-                    user.lastMessageTime
-                  }}</span>
                 </div>
                 <span class="block ml-2 text-sm text-gray-600">{{
-                  user.lastMessage
+                  user.lastMessage?.message
                 }}</span>
               </div>
             </a>
@@ -124,7 +164,7 @@ const selectUser = async (user) => {
             <!-- Dynamic User Info -->
             <img
               class="object-cover w-10 h-10 rounded-full"
-              :src="'/' + activeChat.userImage"
+              :src="activeChat.userImage"
               :alt="activeChat.userName"
             />
             <span class="block ml-2 font-bold text-gray-600">{{
@@ -134,49 +174,52 @@ const selectUser = async (user) => {
               class="absolute w-3 h-3 bg-green-600 rounded-full left-10 top-3"
             ></span>
           </div>
-          <div class="relative w-full p-6 overflow-y-auto h-[40rem]">
+          <div class="relative w-full p-6 overflow-y-auto h-[40rem]" id="chats">
             <ul class="space-y-2">
               <li
                 v-for="message in activeChat.messages"
                 :key="message.id"
                 class="flex"
                 :class="{
-                  'justify-end': message.sender === 'You',
-                  'justify-start': message.sender !== 'You',
+                  'justify-end': message.from_id === data.id,
+                  'justify-start': message.from_id !== data.id,
                 }"
               >
                 <div
                   class="relative max-w-xl px-4 py-2 text-gray-700 rounded shadow"
-                  :class="{ 'bg-gray-100': message.sender === 'You' }"
+                  :class="{ 'bg-gray-100': message.from_id === data.id }"
                 >
-                  <span class="block">{{ message.content }}</span>
+                  <span class="block">{{ message.message }}</span>
                 </div>
               </li>
             </ul>
           </div>
 
-          <div
-            class="flex items-center justify-between w-full p-3 border-t border-gray-300"
-          >
-            <input
-              type="text"
-              v-model="newMessage"
-              placeholder="Message"
-              class="block w-full py-2 pl-4 mx-3 bg-gray-100 rounded-full outline-none focus:text-gray-700"
-              name="message"
-            />
-            <button @click="sendMessage" type="submit">
-              <svg
-                class="w-5 h-5 text-gray-500 origin-center transform rotate-90"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
-                />
-              </svg>
-            </button>
+          <div>
+            <form
+              class="flex items-center justify-between w-full p-3 border-t border-gray-300"
+              @submit.prevent="sendMessage"
+            >
+              <input
+                type="text"
+                v-model="newMessage"
+                placeholder="Message"
+                class="block w-full py-2 pl-4 mx-3 bg-gray-100 rounded-full outline-none focus:text-gray-700"
+                name="message"
+              />
+              <button type="submit">
+                <svg
+                  class="w-5 h-5 text-gray-500 origin-center transform rotate-90"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
+                  />
+                </svg>
+              </button>
+            </form>
           </div>
         </div>
       </div>
